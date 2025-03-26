@@ -1,18 +1,44 @@
 #include <Arduino.h>
 
-// put function declarations here:
-int myFunction(int, int);
+typedef int Pin;
+
+const Pin R_DA = 5;
+const Pin Y_DA = 6;
+const Pin G_DA = 7;
+
+const Pin R_TZ = 10;
+const Pin Y_TZ = 11;
+const Pin G_TZ = 12;
+
+const Pin P = 13;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  pinMode(R_DA, OUTPUT);
+  pinMode(Y_DA, OUTPUT);
+  pinMode(G_DA, OUTPUT);
+  pinMode(R_TZ, OUTPUT);
+  pinMode(Y_TZ, OUTPUT);
+  pinMode(G_TZ, OUTPUT);
+  pinMode(P, INPUT_PULLDOWN);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  digitalWrite(R_DA, HIGH);
+  digitalWrite(Y_DA, HIGH);
+  digitalWrite(G_DA, HIGH);
+  digitalWrite(R_TZ, HIGH);
+  digitalWrite(Y_TZ , HIGH);
+  digitalWrite(G_TZ, HIGH);
+
+  delay(800);
+
+  digitalWrite(R_DA, LOW);
+  digitalWrite(Y_DA, LOW);
+  digitalWrite(G_DA, LOW);
+  digitalWrite(R_TZ, LOW);
+  digitalWrite(Y_TZ , LOW);
+  digitalWrite(G_TZ, LOW);
+
+  delay(500);
 }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
-}
