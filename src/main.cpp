@@ -2,15 +2,15 @@
 
 typedef int Pin;
 
-const Pin R_DA = 5;
-const Pin Y_DA = 6;
-const Pin G_DA = 7;
+const Pin R_DA = 13;
+const Pin Y_DA = 12;
+const Pin G_DA = 11;
 
-const Pin R_TZ = 10;
-const Pin Y_TZ = 11;
-const Pin G_TZ = 12;
+const Pin R_TZ = 7;
+const Pin Y_TZ = 6;
+const Pin G_TZ = 5;
 
-const Pin P = 13;
+// const Pin P = 13;
 
 void setup() {
   pinMode(R_DA, OUTPUT);
@@ -19,7 +19,7 @@ void setup() {
   pinMode(R_TZ, OUTPUT);
   pinMode(Y_TZ, OUTPUT);
   pinMode(G_TZ, OUTPUT);
-  pinMode(P, INPUT_PULLDOWN);
+  // pinMode(P, INPUT_PULLDOWN);
 }
 
 void loop() {
