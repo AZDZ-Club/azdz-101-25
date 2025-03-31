@@ -1,0 +1,93 @@
+/**
+ * 
+   Copyright 2025 Noorullah
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   ================================================================================
+
+   Following logic code is meant to be a very simple way to convey Moore State-Machines. 
+   The future is to extend the logic with a timer & TZ-Road Trigger. 
+
+ */
+#include <Arduino.h>
+
+// LED Pins
+const int greenLED = 11;
+const int yellowLED = 12;
+const int redLED = 13;
+
+const int pedestrianGreen = 5;
+
+// Button Pins
+const int button1 = 2;  
+
+bool pedestrianWaiting = false;
+unsigned long lastPressTime = 0;
+
+void setup() {
+    Serial.begin(9600);
+
+    pinMode(greenLED, OUTPUT);
+    pinMode(yellowLED, OUTPUT);
+    pinMode(redLED, OUTPUT);
+    pinMode(pedestrianGreen, OUTPUT);
+    pinMode(button1, INPUT_PULLUP);
+
+    Serial.println("We are ready");
+}
+
+// Traffic Light Function
+void TrafficLightSys() {
+    if (pedestrianWaiting) {
+        Serial.println("Pedestrian button pressed! Switching to red.");
+        digitalWrite(greenLED, LOW);
+        digitalWrite(yellowLED, LOW);
+        digitalWrite(redLED, HIGH);
+        digitalWrite(pedestrianGreen, HIGH);
+        delay(8000);  // Pedestrian crossing time
+
+        pedestrianWaiting = false;  // Reset pedestrian request
+        digitalWrite(pedestrianGreen, LOW);
+    }
+
+    Serial.println("Normal traffic cycle running...");
+    digitalWrite(redLED, HIGH);
+    delay(3000);
+
+    digitalWrite(yellowLED, HIGH);
+    digitalWrite(redLED, LOW);
+    delay(700);
+
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(greenLED, HIGH);
+    delay(8000);
+
+    digitalWrite(yellowLED, HIGH);
+    digitalWrite(greenLED, LOW);
+    delay(570);
+
+    digitalWrite(yellowLED, LOW);
+}
+
+void loop() {
+    if (digitalRead(button1) == LOW) {
+        if (millis() - lastPressTime > 300) {  
+            lastPressTime = millis();
+            Serial.println("Button Press Detected!");
+            pedestrianWaiting = true;
+        }
+    }
+
+    TrafficLightSys();
+}

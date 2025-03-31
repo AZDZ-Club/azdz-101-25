@@ -1,0 +1,160 @@
+/**
+ *
+   Copyright 2025 Birnadin Erick & Noorullah
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   ================================================================================
+
+   This logic implements a pedestrian crossing traffic light system
+   using a Moore state machine. Future extensions may include sensors
+   and dynamic timing.
+ */
+#include <Arduino.h>
+
+namespace PedestrianDemo
+{
+
+  // Traffic Light LEDs
+  const int CAR_RED = 13;
+  const int CAR_YELLOW = 12;
+  const int CAR_GREEN = 11;
+
+  // Pedestrian Light LEDs
+  const int PED_RED = 7;
+  const int PED_GREEN = 5;
+
+  // Button for pedestrian crossing request
+  const int BUTTON = 2;
+
+  // Timings
+  const unsigned long GREEN_TIME = 5000;
+  const unsigned long YELLOW_TIME = 2000;
+  const unsigned long WALK_TIME = 5000;
+  const unsigned long BUFFER_TIME = 1000;
+
+  enum State
+  {
+    CAR_GO,
+    CAR_WARN,
+    PED_GO,
+    PED_WARN
+  };
+
+  struct Output
+  {
+    int carRed;
+    int carYellow;
+    int carGreen;
+    int pedRed;
+    int pedGreen;
+    unsigned long waitDuration;
+  };
+
+  volatile bool buttonPressed = false;
+
+  // add IRAM_ATTR if using ESP32s
+  void buttonISR()
+  {
+    buttonPressed = true;
+  }
+
+  State state_machine(State current_state)
+  {
+    switch (current_state)
+    {
+    case CAR_GO:
+      return buttonPressed ? CAR_WARN : CAR_GO;
+    case CAR_WARN:
+      return PED_GO;
+    case PED_GO:
+      return PED_WARN;
+    case PED_WARN:
+      buttonPressed = false;
+      return CAR_GO;
+    default:
+      return CAR_GO;
+    }
+  }
+
+  void calc_output(Output *output, State curr_state)
+  {
+    output->carRed = LOW;
+    output->carYellow = LOW;
+    output->carGreen = LOW;
+    output->pedRed = LOW;
+    output->pedGreen = LOW;
+
+    switch (curr_state)
+    {
+    case CAR_GO:
+      output->carGreen = HIGH;
+      output->pedRed = HIGH;
+      output->waitDuration = GREEN_TIME;
+      break;
+    case CAR_WARN:
+      output->carYellow = HIGH;
+      output->pedRed = HIGH;
+      output->waitDuration = YELLOW_TIME;
+      break;
+    case PED_GO:
+      output->carRed = HIGH;
+      output->pedGreen = HIGH;
+      output->waitDuration = WALK_TIME;
+      break;
+    case PED_WARN:
+      output->carRed = HIGH;
+      output->pedRed = HIGH;
+      output->waitDuration = BUFFER_TIME;
+      break;
+    }
+  }
+
+  void update_output(Output *output)
+  {
+    digitalWrite(CAR_RED, output->carRed);
+    digitalWrite(CAR_YELLOW, output->carYellow);
+    digitalWrite(CAR_GREEN, output->carGreen);
+    digitalWrite(PED_RED, output->pedRed);
+    digitalWrite(PED_GREEN, output->pedGreen);
+  }
+
+  State current_state = CAR_GO;
+  Output next_output = {LOW, LOW, HIGH, HIGH, LOW, GREEN_TIME};
+
+  void setup()
+  {
+    Serial.begin(9600);
+
+    pinMode(CAR_RED, OUTPUT);
+    pinMode(CAR_YELLOW, OUTPUT);
+    pinMode(CAR_GREEN, OUTPUT);
+    pinMode(PED_RED, OUTPUT);
+    pinMode(PED_GREEN, OUTPUT);
+    pinMode(BUTTON, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(BUTTON), buttonISR, FALLING);
+
+    current_state = CAR_GO;
+    calc_output(&next_output, current_state);
+    update_output(&next_output);
+  }
+
+  void loop()
+  {
+    delay(next_output.waitDuration);
+    current_state = state_machine(current_state);
+    calc_output(&next_output, current_state);
+    update_output(&next_output);
+  }
+
+} // namespace PedestrianDemo
